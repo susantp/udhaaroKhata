@@ -1,74 +1,43 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { SafeAreaWrapper } from "@/components/common/SafeAreaWrapper";
+import ScreenHeader from "@/components/common/ScreenHeader";
+import lang from "@/lang/lang";
+import { useSQLiteContext } from "expo-sqlite";
+import { drizzle } from "drizzle-orm/expo-sqlite";
+import * as schema from "@/db/schema";
+import { transactions } from "@/db/schema";
+import { useEffect, useState } from "react";
+import ContentWrapper from "@/components/common/ContentWrapper";
+import { FlatList, Text, View } from "react-native";
+import { ChevronRightIcon } from "react-native-heroicons/outline";
+import { Transaction } from "@/types";
 
 export default function HomeScreen() {
+  const db = useSQLiteContext();
+  const drizzleDb = drizzle(db, { schema });
+  const [transactionList, setTransactionList] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const res: Transaction[] = drizzleDb.select().from(transactions).all();
+      setTransactionList(res);
+    };
+    load();
+  }, []);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <SafeAreaWrapper>
+      <ScreenHeader title={lang("Today's transactions")} />
+      <ContentWrapper>
+        <FlatList
+          data={transactionList}
+          renderItem={({ item }) => (
+            <View className="flex-row justify-between">
+              <Text className="text-black">{item.created_at}</Text>
+              <ChevronRightIcon size={28} color={"white"} />
+            </View>
+          )}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      </ContentWrapper>
+    </SafeAreaWrapper>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
