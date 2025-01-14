@@ -40,7 +40,7 @@ export default function CreditorList() {
         />
         <ConfirmationDialog
           visible={dialogVisible}
-          message="Are you sure you want to delete this transaction?"
+          message="Are you sure you want to delete the record ?"
           onConfirm={deleteCreditor}
           onCancel={() => setDialogVisible(!dialogVisible)}
         />

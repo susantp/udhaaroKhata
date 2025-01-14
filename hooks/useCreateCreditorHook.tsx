@@ -45,9 +45,9 @@ export default function useCreateCreditorHook() {
         .delete(creditors)
         .where(eq(creditors.id, selectedCreditor.creditorId));
       setDialogVisible(false);
-      alert(`Transaction deleted successfully.`);
+      alert(lang(`Creditor deleted successfully.`));
     } catch (error) {
-      console.error("Error deleting transaction:", error);
+      console.error("Error deleting creditor:", error);
     }
   };
   const createCreditors = async () => {
