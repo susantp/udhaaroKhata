@@ -25,8 +25,6 @@ const TransactionRenderView = ({
     <View className="w-9/12 flex-row">
       <View className="3/9 flex-1 flex-row">
         <Text className="text-md font-semibold text-black">
-          {item.transactionId}
-          {"   "}
           {dayjs(item.transactionDate).format("YYYY-MM-DD")}
         </Text>
       </View>
