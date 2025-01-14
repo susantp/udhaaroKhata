@@ -9,6 +9,7 @@ import { useState } from "react";
 import { today } from "@/utils/date";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite/index";
 import { eq, sql } from "drizzle-orm";
+import dayjs from "dayjs";
 
 export default function useCreateCreditorHook() {
   const db = useSQLiteContext();
@@ -50,14 +51,20 @@ export default function useCreateCreditorHook() {
     }
   };
   const createCreditors = async () => {
+    const { name, address, phone } = formData;
+    if (name === "" || address === "" || phone === "") {
+      alert("Please enter a valid data");
+    }
+    const insertedCredit = {
+      name: name,
+      created_at: dayjs().format("YYYY-MM-DD"),
+      phone: phone,
+      address: address,
+    };
+
     drizzleDb
       .insert(creditors)
-      .values({
-        name: formData.name,
-        created_at: today(),
-        phone: formData.phone,
-        address: formData.address,
-      })
+      .values(insertedCredit)
       .then((r) => {
         alert(lang("Creditor created!"));
         console.log("after creation success: ", r);
