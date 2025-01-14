@@ -14,7 +14,7 @@ export default function HomeScreen() {
     setDialogVisible,
     dialogVisible,
     deleteTransaction,
-    transactionList,
+    todayTransaction,
   } = useCreateTransactionHook();
   return (
     <SafeAreaWrapper>
@@ -22,7 +22,7 @@ export default function HomeScreen() {
       <ContentWrapper>
         <FlatList
           keyExtractor={(item) => item.transactionId.toString()}
-          data={transactionList}
+          data={todayTransaction}
           contentContainerStyle={{ padding: 10, rowGap: 10 }}
           renderItem={({ item }) => (
             <TransactionRenderView

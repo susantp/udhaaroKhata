@@ -15,11 +15,11 @@ export default function HomeScreen() {
   const {
     dialogVisible,
     setDialogVisible,
-    transactionList,
+    allTransactions,
     setSelectedTransaction,
     deleteTransaction,
   } = useCreateTransactionHook();
-  const totalSum = transactionList.reduce((acc, cur) => {
+  const totalSum = allTransactions.reduce((acc, cur) => {
     return acc + cur.amount;
   }, 0);
 
@@ -29,7 +29,7 @@ export default function HomeScreen() {
       <ContentWrapper>
         <AddTransactionBtn totalSum={totalSum} />
         <FlatList
-          data={transactionList}
+          data={allTransactions}
           contentContainerStyle={{ padding: 10, rowGap: 10 }}
           renderItem={({ item }) => (
             <TransactionRenderView

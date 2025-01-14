@@ -6,8 +6,7 @@ import lang from "@/lang/lang";
 import { CreditorRenderViewItem, InputField } from "@/types";
 import { Button, FlatList, Text, TextInput, View } from "react-native";
 import { useState } from "react";
-import { today } from "@/utils/date";
-import { useLiveQuery } from "drizzle-orm/expo-sqlite/index";
+import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { eq, sql } from "drizzle-orm";
 import dayjs from "dayjs";
 

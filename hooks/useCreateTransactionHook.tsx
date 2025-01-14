@@ -4,11 +4,11 @@ import * as schema from "@/db/schema";
 import { creditors, transactions } from "@/db/schema";
 import { TransactionInputField, TransactionRenderViewItem } from "@/types";
 import { useState } from "react";
-import { today } from "@/utils/date";
 import dayjs from "dayjs";
 import { DateType } from "react-native-ui-datepicker";
 import lang from "@/lang/lang";
 import { desc, eq } from "drizzle-orm";
+import day from "react-native-ui-datepicker/src/components/Day";
 
 export default function useCreateTransactionHook() {
   const db = useSQLiteContext();
@@ -29,7 +29,7 @@ export default function useCreateTransactionHook() {
       .select({ id: creditors.id, name: creditors.name })
       .from(creditors),
   );
-  const { data: transactionList } = useLiveQuery(
+  const { data: allTransactions } = useLiveQuery(
     drizzleDb
       .select({
         transactionId: transactions.id,
@@ -42,6 +42,20 @@ export default function useCreateTransactionHook() {
       .leftJoin(creditors, eq(transactions.creditor_id, creditors.id))
       .groupBy(creditors.name, transactions.transaction_date),
   );
+  const { data: todayTransaction } = useLiveQuery(
+    drizzleDb
+      .select({
+        transactionId: transactions.id,
+        amount: transactions.amount,
+        creditor: creditors.name,
+        transactionDate: transactions.transaction_date,
+      })
+      .from(transactions)
+      .where(eq(transactions.transaction_date, dayjs().format("YYYY-MM-DD")))
+      .leftJoin(creditors, eq(transactions.creditor_id, creditors.id))
+      .groupBy(creditors.name, transactions.transaction_date),
+  );
+  console.log(todayTransaction);
   const deleteTransaction = async () => {
     if (!selectedTransaction) return;
     try {
@@ -57,11 +71,16 @@ export default function useCreateTransactionHook() {
   const createTransaction = async () => {
     const { item, amount, creditor_id, transaction_date } = formData;
 
-    if (item === "" || amount === 0 || creditor_id === 0) {
+    if (
+      item === "" ||
+      amount === 0 ||
+      creditor_id === 0 ||
+      transaction_date === ""
+    ) {
       alert("Please enter a valid data");
     }
     const insertData = {
-      transaction_date: transaction_date.toString(),
+      transaction_date: dayjs(transaction_date).format("YYYY-MM-DD"),
       creditor_id: creditor_id,
       amount: amount,
       item: item,
@@ -130,8 +149,9 @@ export default function useCreateTransactionHook() {
     dialogVisible,
     setDialogVisible,
     deleteTransaction,
-    transactionList,
+    allTransactions,
     selectedTransaction,
     setSelectedTransaction,
+    todayTransaction,
   };
 }
