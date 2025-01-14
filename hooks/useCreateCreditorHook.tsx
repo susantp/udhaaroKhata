@@ -40,7 +40,6 @@ export default function useCreateCreditorHook() {
     if (!selectedCreditor) return;
     console.log("Deleting transaction with ID:", selectedCreditor.creditorId);
     try {
-      // Uncomment to enable actual deletion
       await drizzleDb
         .delete(creditors)
         .where(eq(creditors.id, selectedCreditor.creditorId));
