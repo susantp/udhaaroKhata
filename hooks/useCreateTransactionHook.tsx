@@ -7,7 +7,6 @@ import { useState } from "react";
 import { today } from "@/utils/date";
 import dayjs from "dayjs";
 import { DateType } from "react-native-ui-datepicker";
-import { TRANSACTION_TYPE } from "@/db/columnEnums";
 import lang from "@/lang/lang";
 import { eq } from "drizzle-orm";
 

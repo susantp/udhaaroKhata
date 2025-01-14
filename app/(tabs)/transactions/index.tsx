@@ -13,7 +13,6 @@ import {
   TrashIcon,
 } from "react-native-heroicons/outline";
 import { Link } from "expo-router";
-import { useState } from "react";
 import { desc, eq } from "drizzle-orm";
 import { Dialog } from "react-native-simple-dialogs";
 import useCreateTransactionHook from "@/hooks/useCreateTransactionHook";

@@ -12,7 +12,6 @@ import {
 import ContentWrapper from "@/components/common/ContentWrapper";
 import useCreateTransactionHook from "@/hooks/useCreateTransactionHook";
 import DateTimePicker from "react-native-ui-datepicker/src/DateTimePicker";
-import { useRef } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { randomUUID } from "expo-crypto";
 import dayjs from "dayjs";

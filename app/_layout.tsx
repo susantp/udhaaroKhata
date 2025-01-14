@@ -11,7 +11,6 @@ import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import migrations from "@/drizzle/migrations";
 import { ActivityIndicator } from "react-native";
 import "../global.css";
-import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -20,7 +19,6 @@ export default function RootLayout() {
   const expoDb = openDatabaseSync(DATABASE_NAME);
   const db = drizzle(expoDb);
   const { success, error } = useMigrations(db, migrations);
-  useDrizzleStudio(db);
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
