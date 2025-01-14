@@ -20,3 +20,9 @@ export type InputField = {
   label: string;
   required: boolean;
 };
+export type TransactionInputField = {
+  transactionDate: InputField;
+  amount: InputField;
+  creditorID: InputField;
+  item: InputField;
+};

@@ -27,6 +27,7 @@ export default function useCreateCreditorHook() {
         address: formData.address,
       })
       .then((r) => {
+        alert(lang("Creditor created!"));
         console.log("after creation success: ", r);
       });
   };
@@ -34,19 +35,19 @@ export default function useCreateCreditorHook() {
     {
       id: "name",
       type: "text",
-      label: lang("Full Name"),
+      label: "Full Name",
       required: true,
     },
     {
       id: "address",
       type: "text",
-      label: lang("Address"),
+      label: "Address",
       required: true,
     },
     {
       id: "phone",
       type: "number",
-      label: lang("Phone"),
+      label: "Phone",
       required: true,
     },
   ];
@@ -60,7 +61,7 @@ export default function useCreateCreditorHook() {
         style={{ flexDirection: "column", rowGap: 10, paddingVertical: 10 }}
         key={item.id}
       >
-        <Text>{item.label}</Text>
+        <Text>{lang(item.label)}</Text>
         <TextInput
           style={{
             borderWidth: 1,

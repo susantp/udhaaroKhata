@@ -11,7 +11,7 @@ export default function CreateCreditor() {
   return (
     <SafeAreaWrapper>
       <ScreenHeader title={lang("Create Creditor")} />
-      <ContentWrapper>
+      <ContentWrapper className="px-3">
         <FlatList
           contentContainerStyle={{
             rowGap: 25,

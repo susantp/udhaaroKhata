@@ -4,7 +4,7 @@ import lang from "@/lang/lang";
 import { useSQLiteContext } from "expo-sqlite";
 import { drizzle, useLiveQuery } from "drizzle-orm/expo-sqlite";
 import * as schema from "@/db/schema";
-import { creditors } from "@/db/schema";
+import { creditors, transactions } from "@/db/schema";
 import ContentWrapper from "@/components/common/ContentWrapper";
 import { Button, FlatList, Text, TouchableOpacity, View } from "react-native";
 import {
@@ -15,14 +15,23 @@ import {
 import { Link } from "expo-router";
 import { Dialog } from "react-native-simple-dialogs";
 import { useState } from "react";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export default function CreditorList() {
   const db = useSQLiteContext();
   const drizzleDb = drizzle(db, { schema });
-  const { data } = useLiveQuery(drizzleDb.select().from(creditors));
+  const { data } = useLiveQuery(
+    drizzleDb
+      .select({
+        creditorId: creditors.id,
+        creditorName: creditors.name,
+        totalAmount: sql<number>`SUM(COALESCE(${transactions.amount}, 0))`,
+      })
+      .from(creditors)
+      .leftJoin(transactions, eq(creditors.id, transactions.creditor_id))
+      .groupBy(creditors.id, creditors.name),
+  );
   const [dialogVisible, setDialogVisible] = useState(false);
-
   const deleteCreditor = async (id: number) => {
     drizzleDb
       .delete(creditors)
@@ -40,53 +49,60 @@ export default function CreditorList() {
         <FlatList
           data={data}
           contentContainerStyle={{ padding: 10, rowGap: 10 }}
-          renderItem={({ item }) => (
-            <View className="flex-row items-center justify-between py-3">
-              <Text className="text-xl font-semibold text-black">
-                {item.name}
-              </Text>
-              <View className="flex-row gap-x-2">
-                <TouchableOpacity
-                  onPress={() => setDialogVisible(!dialogVisible)}
-                >
-                  <TrashIcon size={28} color={"black"} />
-                </TouchableOpacity>
-                <TouchableOpacity>
-                  <ChevronRightIcon size={28} color={"black"} />
-                </TouchableOpacity>
-              </View>
-              <Dialog
-                dialogStyle={{
-                  backgroundColor: "red",
-                  borderRadius: 10,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                visible={dialogVisible}
-                contentInsetAdjustmentBehavior="automatic"
-                onRequestClose={() => setDialogVisible(!dialogVisible)}
-                onTouchOutside={() => setDialogVisible(!dialogVisible)}
-              >
-                <View className="flex-col items-center justify-items-center gap-y-8">
-                  <Text className="text-xl font-extrabold text-white">
-                    Are you sure want to delete this record ?
+          renderItem={({ item }) => {
+            return (
+              <View className="flex-row items-center justify-between border-b border-b-gray-300 py-3">
+                <View className="w-9/12 flex-row gap-x-14">
+                  <Text className="text-md font-semibold text-black">
+                    {item.creditorName}
                   </Text>
-                  <View className="flex-row gap-x-4">
-                    <Button
-                      title="Sure"
-                      color={`#ae5555`}
-                      onPress={() => deleteCreditor(item.id)}
-                    />
-                    <Button
-                      title="Cancel"
-                      color="green"
-                      onPress={() => setDialogVisible(!dialogVisible)}
-                    />
-                  </View>
+                  <Text className="text-md font-semibold text-black">
+                    Total Credit: {item.totalAmount}
+                  </Text>
                 </View>
-              </Dialog>
-            </View>
-          )}
+                <View className="w-3/12 flex-row justify-end gap-x-2">
+                  <TouchableOpacity
+                    onPress={() => setDialogVisible(!dialogVisible)}
+                  >
+                    <TrashIcon size={28} color={"red"} />
+                  </TouchableOpacity>
+                  <TouchableOpacity>
+                    <ChevronRightIcon size={28} color={"black"} />
+                  </TouchableOpacity>
+                </View>
+                <Dialog
+                  dialogStyle={{
+                    backgroundColor: "red",
+                    borderRadius: 10,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  visible={dialogVisible}
+                  contentInsetAdjustmentBehavior="automatic"
+                  onRequestClose={() => setDialogVisible(!dialogVisible)}
+                  onTouchOutside={() => setDialogVisible(!dialogVisible)}
+                >
+                  <View className="flex-col items-center justify-items-center gap-y-8">
+                    <Text className="text-xl font-extrabold text-white">
+                      Are you sure want to delete this record ?
+                    </Text>
+                    <View className="flex-row gap-x-4">
+                      <Button
+                        title="Sure"
+                        color={`#ae5555`}
+                        onPress={() => deleteCreditor(item.creditorId)}
+                      />
+                      <Button
+                        title="Cancel"
+                        color="green"
+                        onPress={() => setDialogVisible(!dialogVisible)}
+                      />
+                    </View>
+                  </View>
+                </Dialog>
+              </View>
+            );
+          }}
         />
       </ContentWrapper>
     </SafeAreaWrapper>
@@ -95,7 +111,7 @@ export default function CreditorList() {
 
 const AddCreditorBtn = () => (
   <Link href={{ pathname: "/creditors/create" }}>
-    <View className="w-full flex-row justify-end px-1 py-2.5">
+    <View className="w-full flex-row justify-end px-4 py-2.5">
       <View className="flex-row items-center justify-between gap-x-2 rounded-md bg-orange-600 px-2 py-3">
         <PlusIcon size={20} color="white" />
         <Text className="text-md font-semibold text-white">

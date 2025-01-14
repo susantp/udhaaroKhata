@@ -7,29 +7,38 @@ import * as schema from "@/db/schema";
 import { creditors, transactions } from "@/db/schema";
 import ContentWrapper from "@/components/common/ContentWrapper";
 import { Button, FlatList, Text, TouchableOpacity, View } from "react-native";
-import { ChevronRightIcon, TrashIcon } from "react-native-heroicons/outline";
+import {
+  ChevronRightIcon,
+  PlusIcon,
+  TrashIcon,
+} from "react-native-heroicons/outline";
+import { Link } from "expo-router";
+import { useState } from "react";
 import { desc, eq } from "drizzle-orm";
-import { today } from "@/utils/date";
 import { Dialog } from "react-native-simple-dialogs";
 import useCreateTransactionHook from "@/hooks/useCreateTransactionHook";
 
 export default function HomeScreen() {
   const db = useSQLiteContext();
   const drizzleDb = drizzle(db, { schema });
-  const { setDialogVisible, dialogVisible, deleteTransaction } =
-    useCreateTransactionHook();
   const { data } = useLiveQuery(
     drizzleDb
       .select()
       .from(transactions)
       .orderBy(desc(transactions.created_at))
-      .leftJoin(creditors, eq(transactions.creditor_id, creditors.id))
-      .where(eq(transactions.created_at, today())),
+      .leftJoin(creditors, eq(transactions.creditor_id, creditors.id)),
   );
+  const { dialogVisible, setDialogVisible, deleteTransaction } =
+    useCreateTransactionHook();
+  const totalSum = data.reduce((acc, cur) => {
+    return acc + cur.transactions.amount;
+  }, 0);
+
   return (
     <SafeAreaWrapper>
-      <ScreenHeader title={lang("Today's transactions")} />
+      <ScreenHeader title={lang("All transactions")} />
       <ContentWrapper>
+        <AddTransactionBtn totalSum={totalSum} />
         <FlatList
           data={data}
           contentContainerStyle={{ padding: 10, rowGap: 10 }}
@@ -96,3 +105,20 @@ export default function HomeScreen() {
     </SafeAreaWrapper>
   );
 }
+const AddTransactionBtn = ({ totalSum }: { totalSum: number }) => (
+  <Link href={{ pathname: "/transactions/create" }}>
+    <View className="w-full flex-row justify-between px-4 py-2.5">
+      <View className="flex-row items-center justify-between">
+        <Text className="text-xl font-semibold text-red-600">
+          Total Credit: {totalSum}
+        </Text>
+      </View>
+      <View className="flex-row items-center justify-between gap-x-2 rounded-md bg-orange-600 px-2 py-3">
+        <PlusIcon size={20} color="white" />
+        <Text className="text-md font-semibold text-white">
+          {lang("Add Transaction")}
+        </Text>
+      </View>
+    </View>
+  </Link>
+);

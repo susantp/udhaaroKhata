@@ -2,7 +2,11 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
 import TabBarBackground from "@/components/ui/TabBarBackground";
-import { HomeIcon, UserGroupIcon } from "react-native-heroicons/outline";
+import {
+  HomeIcon,
+  UserGroupIcon,
+  WalletIcon,
+} from "react-native-heroicons/outline";
 import lang from "@/lang/lang";
 
 export default function TabLayout() {
@@ -26,6 +30,13 @@ export default function TabLayout() {
         options={{
           title: lang("Home"),
           tabBarIcon: ({ color }) => <HomeIcon size={30} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="transactions"
+        options={{
+          title: lang("Transactions"),
+          tabBarIcon: ({ color }) => <WalletIcon size={30} color={color} />,
         }}
       />
       <Tabs.Screen
