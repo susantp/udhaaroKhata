@@ -65,7 +65,7 @@ export default function useCreateTransactionHook() {
       creditor_id: creditor_id,
       amount: amount,
       item: item,
-      created_at: today(),
+      created_at: dayjs().format("YYYY-MM-DD"),
     };
     await drizzleDb
       .insert(transactions)
