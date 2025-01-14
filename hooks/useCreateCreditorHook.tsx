@@ -1,22 +1,55 @@
 import { useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import * as schema from "@/db/schema";
-import { creditors } from "@/db/schema";
+import { creditors, transactions } from "@/db/schema";
 import lang from "@/lang/lang";
-import { InputField } from "@/types";
+import { CreditorRenderViewItem, InputField } from "@/types";
 import { Button, FlatList, Text, TextInput, View } from "react-native";
 import { useState } from "react";
 import { today } from "@/utils/date";
+import { useLiveQuery } from "drizzle-orm/expo-sqlite/index";
+import { eq, sql } from "drizzle-orm";
 
 export default function useCreateCreditorHook() {
   const db = useSQLiteContext();
   const drizzleDb = drizzle(db, { schema });
+  const [selectedCreditor, setSelectedCreditor] =
+    useState<CreditorRenderViewItem | null>(null);
+  const { data } = useLiveQuery(
+    drizzleDb
+      .select({
+        creditorId: creditors.id,
+        creditorName: creditors.name,
+        totalAmount: sql<number>`SUM(COALESCE(
+        ${transactions.amount},
+        0
+        )
+        )`,
+      })
+      .from(creditors)
+      .leftJoin(transactions, eq(creditors.id, transactions.creditor_id))
+      .groupBy(creditors.id, creditors.name),
+  );
+  const [dialogVisible, setDialogVisible] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     address: "",
     phone: "",
   });
-
+  const deleteCreditor = async () => {
+    if (!selectedCreditor) return;
+    console.log("Deleting transaction with ID:", selectedCreditor.creditorId);
+    try {
+      // Uncomment to enable actual deletion
+      await drizzleDb
+        .delete(creditors)
+        .where(eq(creditors.id, selectedCreditor.creditorId));
+      setDialogVisible(false);
+      alert(`Transaction deleted successfully.`);
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+    }
+  };
   const createCreditors = async () => {
     drizzleDb
       .insert(creditors)
@@ -94,5 +127,11 @@ export default function useCreateCreditorHook() {
   ];
   return {
     CARDS,
+    data,
+    selectedCreditor,
+    setSelectedCreditor,
+    setDialogVisible,
+    dialogVisible,
+    deleteCreditor,
   };
 }

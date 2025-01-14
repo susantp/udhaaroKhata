@@ -1,17 +1,21 @@
+import { DateType } from "react-native-ui-datepicker";
+import { creditors } from "@/db/schema";
+
 export type Creditor = {
   id: number;
   name: string;
   address: string;
   phone: string;
+  created_at: string;
 };
 export type Transaction = {
   id: number;
-  creditor_id: number;
   created_at: string;
-  transaction_date: string;
+  creditor_id: number;
+  transaction_date: DateType;
   type: number;
-  amount: number;
   item: string;
+  amount: number;
 };
 
 export type InputField = {
@@ -25,4 +29,15 @@ export type TransactionInputField = {
   amount: InputField;
   creditorID: InputField;
   item: InputField;
+};
+export type TransactionRenderViewItem = {
+  transactionId: number;
+  amount: number;
+  creditor: string | null;
+  transactionDate: string;
+};
+export type CreditorRenderViewItem = {
+  creditorId: number;
+  creditorName: string;
+  totalAmount: number;
 };

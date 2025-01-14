@@ -1,96 +1,45 @@
 import { SafeAreaWrapper } from "@/components/common/SafeAreaWrapper";
 import ScreenHeader from "@/components/common/ScreenHeader";
 import lang from "@/lang/lang";
-import { useSQLiteContext } from "expo-sqlite";
-import { drizzle, useLiveQuery } from "drizzle-orm/expo-sqlite";
-import * as schema from "@/db/schema";
-import { creditors, transactions } from "@/db/schema";
 import ContentWrapper from "@/components/common/ContentWrapper";
-import { Button, FlatList, Text, TouchableOpacity, View } from "react-native";
-import { ChevronRightIcon, TrashIcon } from "react-native-heroicons/outline";
-import { desc, eq } from "drizzle-orm";
-import { today } from "@/utils/date";
-import { Dialog } from "react-native-simple-dialogs";
+import { FlatList } from "react-native";
 import useCreateTransactionHook from "@/hooks/useCreateTransactionHook";
+import TransactionRenderView from "@/components/common/TransactionRenderView";
+import React from "react";
+import ConfirmationDialog from "@/components/common/ConfirmDialog";
 
 export default function HomeScreen() {
-  const db = useSQLiteContext();
-  const drizzleDb = drizzle(db, { schema });
-  const { setDialogVisible, dialogVisible, deleteTransaction } =
-    useCreateTransactionHook();
-  const { data } = useLiveQuery(
-    drizzleDb
-      .select()
-      .from(transactions)
-      .orderBy(desc(transactions.created_at))
-      .leftJoin(creditors, eq(transactions.creditor_id, creditors.id))
-      .where(eq(transactions.created_at, today())),
-  );
+  const {
+    setSelectedTransaction,
+    setDialogVisible,
+    dialogVisible,
+    deleteTransaction,
+    transactionList,
+  } = useCreateTransactionHook();
   return (
     <SafeAreaWrapper>
       <ScreenHeader title={lang("Today's transactions")} />
       <ContentWrapper>
         <FlatList
-          data={data}
+          keyExtractor={(item) => item.transactionId.toString()}
+          data={transactionList}
           contentContainerStyle={{ padding: 10, rowGap: 10 }}
           renderItem={({ item }) => (
-            <View className="flex-row items-center justify-start border-b border-b-gray-300 py-2">
-              <View className="w-9/12 flex-row justify-items-start gap-x-8">
-                <Text className="text-md font-semibold text-black">
-                  {item.transactions.transaction_date}
-                </Text>
-                <Text className="text-md font-semibold text-black">
-                  {item.creditors ? item.creditors.name : "N/A"}
-                </Text>
-                <Text className="text-md font-semibold text-black">
-                  {item.transactions.item}
-                </Text>
-                <Text className="text-md font-semibold text-black">
-                  {item.transactions.amount}
-                </Text>
-              </View>
-              <View className="w-3/12 flex-row justify-end gap-x-2">
-                <TouchableOpacity
-                  onPress={() => setDialogVisible(!dialogVisible)}
-                >
-                  <TrashIcon size={28} color={"red"} />
-                </TouchableOpacity>
-                <TouchableOpacity>
-                  <ChevronRightIcon size={28} color={"black"} />
-                </TouchableOpacity>
-              </View>
-              <Dialog
-                dialogStyle={{
-                  backgroundColor: "red",
-                  borderRadius: 10,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                visible={dialogVisible}
-                contentInsetAdjustmentBehavior="automatic"
-                onRequestClose={() => setDialogVisible(!dialogVisible)}
-                onTouchOutside={() => setDialogVisible(!dialogVisible)}
-              >
-                <View className="flex-col items-center justify-items-center gap-y-8">
-                  <Text className="text-xl font-extrabold text-white">
-                    Are you sure want to delete this record ?
-                  </Text>
-                  <View className="flex-row gap-x-4">
-                    <Button
-                      title="Sure"
-                      color={`#ae5555`}
-                      onPress={() => deleteTransaction(item.transactions.id)}
-                    />
-                    <Button
-                      title="Cancel"
-                      color="green"
-                      onPress={() => setDialogVisible(!dialogVisible)}
-                    />
-                  </View>
-                </View>
-              </Dialog>
-            </View>
+            <TransactionRenderView
+              key={item.transactionId}
+              item={item}
+              onDelete={() => {
+                setSelectedTransaction(item);
+                setDialogVisible(!dialogVisible);
+              }}
+            />
           )}
+        />
+        <ConfirmationDialog
+          visible={dialogVisible}
+          message="Are you sure you want to delete this transaction?"
+          onConfirm={deleteTransaction}
+          onCancel={() => setDialogVisible(!dialogVisible)}
         />
       </ContentWrapper>
     </SafeAreaWrapper>

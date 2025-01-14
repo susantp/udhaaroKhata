@@ -2,13 +2,13 @@ import { useSQLiteContext } from "expo-sqlite";
 import { drizzle, useLiveQuery } from "drizzle-orm/expo-sqlite";
 import * as schema from "@/db/schema";
 import { creditors, transactions } from "@/db/schema";
-import { TransactionInputField } from "@/types";
+import { TransactionInputField, TransactionRenderViewItem } from "@/types";
 import { useState } from "react";
 import { today } from "@/utils/date";
 import dayjs from "dayjs";
 import { DateType } from "react-native-ui-datepicker";
 import lang from "@/lang/lang";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 export default function useCreateTransactionHook() {
   const db = useSQLiteContext();
@@ -16,6 +16,8 @@ export default function useCreateTransactionHook() {
   const [calendarShow, setCalendarShow] = useState(false);
   const [pickerShow, setPickerShow] = useState(false);
   const [dialogVisible, setDialogVisible] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionRenderViewItem | null>(null);
   const [formData, setFormData] = useState({
     item: "",
     creditor_id: 0,
@@ -27,30 +29,47 @@ export default function useCreateTransactionHook() {
       .select({ id: creditors.id, name: creditors.name })
       .from(creditors),
   );
-  const deleteTransaction = async (id: number) => {
+  const { data: transactionList } = useLiveQuery(
     drizzleDb
-      .delete(transactions)
-      .where(eq(transactions.id, id))
-      .then((result) => {
-        console.log(result);
-        setDialogVisible(false);
-      });
+      .select({
+        transactionId: transactions.id,
+        amount: transactions.amount,
+        creditor: creditors.name,
+        transactionDate: transactions.transaction_date,
+      })
+      .from(transactions)
+      .orderBy(desc(transactions.created_at))
+      .leftJoin(creditors, eq(transactions.creditor_id, creditors.id))
+      .groupBy(creditors.name, transactions.transaction_date),
+  );
+  const deleteTransaction = async () => {
+    if (!selectedTransaction) return;
+    try {
+      await drizzleDb
+        .delete(transactions)
+        .where(eq(transactions.id, selectedTransaction.transactionId));
+      setDialogVisible(false);
+      alert(`Transaction deleted successfully.`);
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+    }
   };
   const createTransaction = async () => {
     const { item, amount, creditor_id, transaction_date } = formData;
+
     if (item === "" || amount === 0 || creditor_id === 0) {
       alert("Please enter a valid data");
-      return;
     }
-    drizzleDb
+    const insertData = {
+      transaction_date: transaction_date.toString(),
+      creditor_id: creditor_id,
+      amount: amount,
+      item: item,
+      created_at: today(),
+    };
+    await drizzleDb
       .insert(transactions)
-      .values({
-        transaction_date: transaction_date.format("YYYY-MM-DD"),
-        creditor_id: creditor_id,
-        amount: amount,
-        item: item,
-        created_at: today(),
-      })
+      .values(insertData)
       .then((r) => {
         alert(lang("Transaction created!"));
         console.log("after creation success: ", r);
@@ -58,14 +77,16 @@ export default function useCreateTransactionHook() {
       .catch((err) => {
         alert(lang("Transaction failed!"));
         console.log("error", err);
+      })
+      .finally(() => {
+        console.log("finally");
       });
   };
   const handleSave = (id: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
   const handleTransactionDateSave = (id: string, value: DateType) => {
-    const localDate = dayjs(value).format("YYYY-MM-DD");
-    setFormData((prev) => ({ ...prev, [id]: localDate }));
+    setFormData((prev) => ({ ...prev, [id]: value }));
     setCalendarShow(!calendarShow);
   };
   const fields: TransactionInputField = {
@@ -109,5 +130,8 @@ export default function useCreateTransactionHook() {
     dialogVisible,
     setDialogVisible,
     deleteTransaction,
+    transactionList,
+    selectedTransaction,
+    setSelectedTransaction,
   };
 }

@@ -133,13 +133,11 @@ export default function CreateTransaction() {
             )}
           </View>
         </View>
-        <View className="py-8">
-          <Button
-            title={lang("Save")}
-            color="#F05625"
-            onPress={createTransaction}
-          />
-        </View>
+        <Button
+          title={lang("Save")}
+          color="#F05625"
+          onPress={createTransaction}
+        />
       </ContentWrapper>
     </SafeAreaWrapper>
   );
