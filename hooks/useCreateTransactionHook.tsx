@@ -38,8 +38,7 @@ export default function useCreateTransactionHook() {
       })
       .from(transactions)
       .orderBy(desc(transactions.created_at))
-      .leftJoin(creditors, eq(transactions.creditor_id, creditors.id))
-      .groupBy(creditors.name, transactions.transaction_date),
+      .leftJoin(creditors, eq(transactions.creditor_id, creditors.id)),
   );
   const { data: todayTransaction } = useLiveQuery(
     drizzleDb
@@ -51,8 +50,7 @@ export default function useCreateTransactionHook() {
       })
       .from(transactions)
       .where(eq(transactions.transaction_date, dayjs().format("YYYY-MM-DD")))
-      .leftJoin(creditors, eq(transactions.creditor_id, creditors.id))
-      .groupBy(creditors.name, transactions.transaction_date),
+      .leftJoin(creditors, eq(transactions.creditor_id, creditors.id)),
   );
   console.log(todayTransaction);
   const deleteTransaction = async () => {
